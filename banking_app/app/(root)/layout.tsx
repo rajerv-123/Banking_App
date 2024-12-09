@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Sidebar from "../components/Sidebar";
+import MobileNav from "../components/MobileNav";
 
 export default function RootLayout({
   children,
@@ -15,13 +16,16 @@ export default function RootLayout({
         <div className="root-layout">
           <Image
             src={"../public/icons/logo.svg"}
-            alt="menu icon"
+            alt="logo"
             width={30}
             height={30}
           />
+          <div>
+            <MobileNav user={loggedIn} />
+          </div>
         </div>
+        {children}
       </div>
-      {children}
     </main>
   );
 }
