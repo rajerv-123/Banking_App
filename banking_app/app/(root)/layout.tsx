@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Sidebar from "../components/Sidebar";
 import MobileNav from "../components/MobileNav";
+import logo from "../public/icons/logo.svg";
 
 export default function RootLayout({
   children,
@@ -14,12 +15,7 @@ export default function RootLayout({
 
       <div className="flex size-full flex-col">
         <div className="root-layout">
-          <Image
-            src={"../public/icons/logo.svg"}
-            alt="logo"
-            width={30}
-            height={30}
-          />
+          <Image src={logo} alt="logo" width={30} height={30} />
           <div>
             <MobileNav user={loggedIn} />
           </div>
