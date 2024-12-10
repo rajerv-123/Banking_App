@@ -5,7 +5,7 @@ import {
   SheetClose,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/app/components/ui/sheet";
 import Image from "next/image";
 import hamburger from "../public/icons/hamburger.svg";
 import Link from "next/link";
@@ -46,7 +46,7 @@ const MobileNav = ({ user }: MobileNavProps) => {
     <section className="w-full max-w-[264px]">
       <Sheet>
         <SheetTrigger>
-          <Image
+          <Image  
             src={hamburger}
             alt="menu"
             height={30}
