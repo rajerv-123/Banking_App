@@ -44,7 +44,7 @@ export const signIn = async ({ email, password }: signInProps) => {
       secure: true,
     });
 
-    const user = await getUserInfo({ userId: session.userId }) 
+    const user = await getUserInfo({ userId: session.userId })
 
     return parseStringify(user);
   } catch (error) {
@@ -54,27 +54,38 @@ export const signIn = async ({ email, password }: signInProps) => {
 
 export const signUp = async ({ password, ...userData }: SignUpParams) => {
   const { email, firstName, lastName } = userData;
-  
+
   let newUserAccount;
 
   try {
     const { account, database } = await createAdminClient();
 
     newUserAccount = await account.create(
-      ID.unique(), 
-      email, 
-      password, 
-      `${firstName} ${lastName}`
+      ID.unique(),
+      email,
+      password,
+      `${firstName || ''} ${lastName || ''}`
     );
 
-    if(!newUserAccount) throw new Error('Error creating user')
+    if (!newUserAccount) throw new Error('Error creating user');
 
-    const dwollaCustomerUrl = await createDwollaCustomer({
+    // Ensure all required fields for NewDwollaCustomerParams are non-optional
+    const dwollaCustomerData: NewDwollaCustomerParams = {
       ...userData,
-      type: 'personal'
-    })
+      type: 'personal',
+      firstName: firstName || '', // Provide a default empty string
+      lastName: lastName || '',  // Provide a default empty string
+      address1: userData.address1 || '',
+      city: userData.city || '',
+      state: userData.state || '',
+      postalCode: userData.postalCode || '',
+      dateOfBirth: userData.dateOfBirth || '',
+      ssn: userData.ssn || '',
+    };
 
-    if(!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer')
+    const dwollaCustomerUrl = await createDwollaCustomer(dwollaCustomerData);
+
+    if (!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer');
 
     const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
 
@@ -86,9 +97,9 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
         ...userData,
         userId: newUserAccount.$id,
         dwollaCustomerId,
-        dwollaCustomerUrl
+        dwollaCustomerUrl,
       }
-    )
+    );
 
     const session = await account.createEmailPasswordSession(email, password);
 
@@ -103,14 +114,15 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
   } catch (error) {
     console.error('Error', error);
   }
-}
+};
+
 
 export async function getLoggedInUser() {
   try {
     const { account } = await createSessionClient();
     const result = await account.get();
 
-    const user = await getUserInfo({ userId: result.$id})
+    const user = await getUserInfo({ userId: result.$id })
 
     return parseStringify(user);
   } catch (error) {
@@ -194,7 +206,7 @@ export const exchangePublicToken = async ({
 
     const accessToken = response.data.access_token;
     const itemId = response.data.item_id;
-    
+
     // Get account information from Plaid using the access token
     const accountsResponse = await plaidClient.accountsGet({
       access_token: accessToken,
@@ -212,13 +224,13 @@ export const exchangePublicToken = async ({
     const processorTokenResponse = await plaidClient.processorTokenCreate(request);
     const processorToken = processorTokenResponse.data.processor_token;
 
-     // Create a funding source URL for the account using the Dwolla customer ID, processor token, and bank name
-     const fundingSourceUrl = await addFundingSource({
+    // Create a funding source URL for the account using the Dwolla customer ID, processor token, and bank name
+    const fundingSourceUrl = await addFundingSource({
       dwollaCustomerId: user.dwollaCustomerId,
       processorToken,
       bankName: accountData.name,
     });
-    
+
     // If the funding source URL is not created, throw an error
     if (!fundingSourceUrl) throw Error;
 
@@ -286,7 +298,7 @@ export const getBankByAccountId = async ({ accountId }: getBankByAccountIdProps)
       [Query.equal('accountId', [accountId])]
     )
 
-    if(bank.total !== 1) return null;
+    if (bank.total !== 1) return null;
 
     return parseStringify(bank.documents[0]);
   } catch (error) {
